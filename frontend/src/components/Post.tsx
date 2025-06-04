@@ -155,7 +155,7 @@ export default function Post({ post, onLike, onComment, isClickable = true }: Po
               <span>{likesCount}</span>
             </button>
             <button
-              onClick={e => { e.stopPropagation(); setShowCommentForm(!showCommentForm); }}
+              onClick={e => { e.stopPropagation(); window.location.href = `/post/${post._id}`; }}
               className="flex items-center gap-1 text-gray-500 hover:text-blue-500 transition-colors"
             >
               <MdChatBubbleOutline className="w-5 h-5" />
@@ -195,6 +195,19 @@ export default function Post({ post, onLike, onComment, isClickable = true }: Po
 
 function ThreadItem({ item, formatDate, repliesCount, onReply, replyingCommentId, setReplyingCommentId, children }: any) {
   const isComment = !!item.parentPost
+  const [isLiked, setIsLiked] = useState(item.likes?.includes(localStorage.getItem('userId')))
+  const [likesCount, setLikesCount] = useState(item.likes?.length || 0)
+  const handleLike = async (e: React.MouseEvent) => {
+    e.stopPropagation()
+    setIsLiked((l: boolean) => !l)
+    setLikesCount((c: number) => isLiked ? c - 1 : c + 1)
+    try {
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/posts/${item._id}/like`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+      })
+    } catch {}
+  }
   return (
     <div className={isComment ? "flex gap-3 items-start mb-2" : "flex gap-3 items-start mb-4"}>
       <Image src={item.author?.username === 'daemon' ? '/me.jpg' : (item.author?.profilePicture || '/default-avatar.png')} alt={item.author?.name || ''} width={isComment ? 32 : 40} height={isComment ? 32 : 40} className={isComment ? "w-8 h-8 rounded-full object-cover" : "w-10 h-10 rounded-full object-cover"} />
@@ -206,16 +219,16 @@ function ThreadItem({ item, formatDate, repliesCount, onReply, replyingCommentId
         </div>
         <div className="text-gray-800 dark:text-gray-200 whitespace-pre-line mt-1">{item.content}</div>
         <div className="flex items-center gap-4 mt-1 mb-2">
-          <button className="flex items-center gap-1 text-gray-500 hover:text-red-500 transition-colors" onClick={e => e.stopPropagation()}>
-            <MdFavoriteBorder className={isComment ? "w-4 h-4" : "w-5 h-5"} />
-            <span>0</span>
+          <button className="flex items-center gap-1 text-gray-500 hover:text-red-500 transition-colors" onClick={handleLike}>
+            {isLiked ? <MdFavorite className={isComment ? "w-4 h-4 text-red-500" : "w-5 h-5 text-red-500"} /> : <MdFavoriteBorder className={isComment ? "w-4 h-4" : "w-5 h-5"} />}
+            <span>{likesCount}</span>
+          </button>
+          <button className="flex items-center gap-1 text-gray-500 hover:text-blue-500 transition-colors" onClick={e => { e.stopPropagation(); window.location.href = `/post/${item._id}` }}>
+            <MdChatBubbleOutline className={isComment ? "w-4 h-4" : "w-5 h-5"} />
+            <span>{repliesCount}</span>
           </button>
           <button className="flex items-center gap-1 text-gray-500 hover:text-green-500 transition-colors" onClick={e => e.stopPropagation()}>
             <MdRepeat className={isComment ? "w-4 h-4" : "w-5 h-5"} />
-            <span className="text-xs ml-1">{repliesCount}</span>
-          </button>
-          <button className="flex items-center gap-1 text-gray-500 hover:text-blue-500 transition-colors" onClick={e => e.stopPropagation()}>
-            <MdShare className={isComment ? "w-4 h-4" : "w-5 h-5"} />
           </button>
           <button onClick={e => { e.stopPropagation(); onReply(e); }} className="flex items-center gap-1 text-gray-500 hover:text-blue-600 transition-colors text-xs font-medium">
             Répondre
