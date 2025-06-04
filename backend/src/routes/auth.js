@@ -1,95 +1,103 @@
 const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
-const { body, validationResult } = require('express-validator');
 const User = require('../models/User');
+const auth = require('../middleware/auth');
 
-// Register
-router.post('/register', [
-  body('username')
-    .trim()
-    .isLength({ min: 3 })
-    .withMessage('Username must be at least 3 characters long'),
-  body('email')
-    .isEmail()
-    .withMessage('Please enter a valid email address')
-    .normalizeEmail(),
-  body('password')
-    .isLength({ min: 6 })
-    .withMessage('Password must be at least 6 characters long')
-], async (req, res) => {
+// Inscription
+router.post('/register', async (req, res) => {
   try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
+    const { username, email, password, name } = req.body;
+
+    // Vérifier si l'utilisateur existe déjà
+    const existingUser = await User.findOne({ 
+      $or: [{ email }, { username }] 
+    });
+
+    if (existingUser) {
+      return res.status(400).json({ 
+        message: 'Un utilisateur avec cet email ou ce nom d\'utilisateur existe déjà' 
+      });
     }
 
-    const { username, email, password } = req.body;
+    // Créer un nouvel utilisateur
+    const user = new User({
+      username,
+      email,
+      password,
+      name
+    });
 
-    // Check if user exists
-    let user = await User.findOne({ $or: [{ email }, { username }] });
-    if (user) {
-      if (user.email === email) {
-        return res.status(400).json({ message: 'Email already in use' });
-      }
-      if (user.username === username) {
-        return res.status(400).json({ message: 'Username already taken' });
-      }
-    }
-
-    // Create user
-    user = new User({ username, email, password });
     await user.save();
 
-    // Generate token
+    // Générer le token
     const token = jwt.sign(
       { userId: user._id },
       process.env.JWT_SECRET,
       { expiresIn: '24h' }
     );
 
-    res.status(201).json({ token });
+    res.status(201).json({
+      token,
+      user: {
+        id: user._id,
+        username: user.username,
+        email: user.email,
+        name: user.name,
+        profilePicture: user.profilePicture
+      }
+    });
   } catch (error) {
-    console.error('Registration error:', error);
-    res.status(500).json({ message: 'Server error', error: error.message });
+    res.status(500).json({ message: 'Erreur lors de l\'inscription', error: error.message });
   }
 });
 
-// Login
-router.post('/login', [
-  body('email').isEmail(),
-  body('password').exists()
-], async (req, res) => {
+// Connexion
+router.post('/login', async (req, res) => {
   try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-    }
-
     const { email, password } = req.body;
 
-    // Check if user exists
+    // Trouver l'utilisateur
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(400).json({ message: 'Invalid credentials' });
+      return res.status(401).json({ message: 'Email ou mot de passe incorrect' });
     }
 
-    // Check password
+    // Vérifier le mot de passe
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
-      return res.status(400).json({ message: 'Invalid credentials' });
+      return res.status(401).json({ message: 'Email ou mot de passe incorrect' });
     }
 
-    // Generate token
+    // Générer le token
     const token = jwt.sign(
       { userId: user._id },
       process.env.JWT_SECRET,
       { expiresIn: '24h' }
     );
 
-    res.json({ token });
+    res.json({
+      token,
+      user: {
+        id: user._id,
+        username: user.username,
+        email: user.email,
+        name: user.name,
+        profilePicture: user.profilePicture
+      }
+    });
   } catch (error) {
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: 'Erreur lors de la connexion', error: error.message });
+  }
+});
+
+// Récupérer l'utilisateur connecté
+router.get('/me', auth, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.userId).select('-password');
+    res.json(user);
+  } catch (error) {
+    res.status(500).json({ message: 'Erreur serveur', error: error.message });
   }
 });
 
