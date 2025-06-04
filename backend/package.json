@@ -1,12 +1,11 @@
 {
   "name": "breezy-backend",
   "version": "1.0.0",
-  "description": "Backend API for Breezy application",
+  "description": "Backend for Breezy social media platform",
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",
-    "dev": "nodemon src/index.js",
-    "test": "jest"
+    "dev": "nodemon src/index.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

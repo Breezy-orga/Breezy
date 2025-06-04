@@ -8,11 +8,12 @@ import {
   MdDarkMode, MdLogout, MdPersonAdd, MdShare, MdLink, 
   MdSend, MdThumbUp, MdEmojiEvents, MdSentimentVerySatisfied, 
   MdSentimentDissatisfied, MdChatBubbleOutline, MdImage, 
-  MdGif, MdExpandMore, MdHome, MdMail, MdExplore, MdRepeat, 
-  MdFlashOn 
+  MdGif, MdExpandMore, MdHome, MdMail, MdRepeat, 
 } from 'react-icons/md';
 import { FaRegSmile } from 'react-icons/fa';
 import { useTheme } from '../../lib/useTheme';
+import PostForm from '@/components/PostForm';
+import PostList from '@/components/PostList';
 
 interface Story {
   username: string;
@@ -123,8 +124,6 @@ function Header() {
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [createMenuOpen, setCreateMenuOpen] = useState(false);
   const [theme, toggleTheme] = useTheme();
-
-  // Pour le badge de notifications
   const notifCount = 3;
 
   return (
@@ -151,24 +150,11 @@ function Header() {
             </div>
           )}
         </div>
-        {/* Notifications */}
-        <div className="relative">
-          <button onClick={() => setNotifOpen(v => !v)} className="relative text-gray-600 hover:text-blue-700 transition">
-            <MdNotifications className="text-3xl" />
-            {notifCount > 0 && <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full px-1.5 py-0.5 font-bold">{notifCount}</span>}
-          </button>
-          {notifOpen && (
-            <div className="absolute right-0 mt-2 w-72 bg-white border border-gray-200 rounded-xl shadow-lg z-40 animate-fade-in">
-              <div className="px-4 py-2 font-bold text-gray-800 border-b">Notifications</div>
-              <div className="divide-y divide-gray-100">
-                <div className="px-4 py-3 hover:bg-blue-50 cursor-pointer flex gap-2 items-center"><MdPersonAdd className="text-xl text-blue-500" /> Alice t'a suivi</div>
-                <div className="px-4 py-3 hover:bg-blue-50 cursor-pointer flex gap-2 items-center"><FaRegSmile className="text-xl text-pink-500" /> Bob a aimé ton post</div>
-                <div className="px-4 py-3 hover:bg-blue-50 cursor-pointer flex gap-2 items-center"><MdEmojiEvents className="text-xl text-yellow-500" /> Carla t'a envoyé un bravo</div>
-              </div>
-              <div className="px-4 py-2 text-center text-blue-600 hover:underline cursor-pointer">Voir toutes les notifications</div>
-            </div>
-          )}
-        </div>
+        {/* Notifications (garder juste le bouton) */}
+        <button onClick={() => setNotifOpen(v => !v)} className="relative text-gray-600 hover:text-blue-700 transition">
+          <MdNotifications className="text-3xl" />
+          {notifCount > 0 && <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full px-1.5 py-0.5 font-bold">{notifCount}</span>}
+        </button>
         {/* Menu utilisateur */}
         <div className="relative">
           <button onClick={() => setUserMenuOpen(v => !v)} className="flex items-center gap-2 focus:outline-none">
@@ -252,7 +238,6 @@ function Post({ post }: { post: Post }) {
             <span className="font-bold text-gray-900 text-base flex items-center gap-1">
               {post.user.name}
               {post.user.isPremium && <span className="ml-1 px-2 py-0.5 bg-gradient-to-r from-yellow-400 to-pink-400 text-xs text-white rounded-full font-bold">Premium</span>}
-              <span className="ml-2 px-2 py-0.5 bg-blue-100 text-xs text-blue-700 rounded-full font-bold">Lvl {post.user.level}</span>
             </span>
             <span className="text-gray-500 ml-2">@{post.user.username}</span>
             <span className="text-gray-400 ml-2 text-sm">{post.date}</span>
@@ -283,12 +268,9 @@ function Post({ post }: { post: Post }) {
       </div>
       {post.image && <Image src={post.image} alt="media" width={400} height={200} className="rounded-xl mb-3 object-cover max-h-60 w-full" />}
       {post.poll && <Poll poll={post.poll} />}
-      <div className="flex gap-8 text-gray-500 text-lg mt-4">
+      <div className="flex gap-2">
         <button className="flex items-center gap-1 hover:text-blue-600 transition group" onClick={() => handleReact('like')}>
           <MdThumbUp className="text-xl group-active:scale-125 transition-transform" /> {reactions.like}
-        </button>
-        <button className="flex items-center gap-1 hover:text-yellow-500 transition group">
-          <MdFlashOn className="text-xl group-active:scale-125 transition-transform" />
         </button>
         <button className="flex items-center gap-1 hover:text-green-600 transition group">
           <MdRepeat className="text-xl group-active:scale-125 transition-transform" />
@@ -310,28 +292,6 @@ function Post({ post }: { post: Post }) {
       {filterTag && (
         <div className="mt-2 text-sm text-blue-600">(Filtrage sur le tag <b>{filterTag}</b> — démo visuelle)</div>
       )}
-    </div>
-  );
-}
-
-function PostForm() {
-  return (
-    <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-lg p-6 mb-8 border border-gray-100 dark:border-gray-800">
-      <div className="flex gap-4 items-start">
-        <Image src="/pp1.jpg" alt="Photo profil" width={48} height={48} className="rounded-full object-cover border border-gray-200" />
-        <div className="flex-1">
-          <textarea className="w-full border border-gray-200 rounded-xl p-4 resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all min-h-[70px] text-gray-900 placeholder-gray-400 bg-gray-50" placeholder="Quoi de neuf ? Partage une actu, une photo, un sondage..." />
-          <div className="flex justify-between mt-2">
-            <div className="flex gap-2">
-              <button className="text-gray-400 hover:text-blue-600 transition" title="Ajouter une image"><MdImage className="text-xl" /></button>
-              <button className="text-gray-400 hover:text-yellow-500 transition" title="Créer un sondage"><MdPoll className="text-xl" /></button>
-              <button className="text-gray-400 hover:text-pink-500 transition" title="Ajouter un GIF"><MdGif className="text-xl" /></button>
-              <button className="text-gray-400 hover:text-green-500 transition" title="Ajouter un événement"><MdEvent className="text-xl" /></button>
-            </div>
-            <button className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-2 rounded-xl font-semibold shadow hover:opacity-90 transition text-base">Publier</button>
-          </div>
-        </div>
-      </div>
     </div>
   );
 }
@@ -384,7 +344,6 @@ function Sidebar() {
     { key: 'profile', label: 'Profil', icon: MdPerson, href: '/profile' },
     { key: 'notifications', label: 'Notifications', icon: MdNotifications, href: '/notifications' },
     { key: 'messages', label: 'Messages', icon: MdMail, href: '/messages' },
-    { key: 'discover', label: 'Découvrir', icon: MdExplore, href: '/discover' },
   ];
   return (
     <aside className="hidden md:flex flex-col w-60 bg-white dark:bg-gray-900 border-r border-gray-100 dark:border-gray-800 min-h-screen px-6 py-8 gap-8">
@@ -408,15 +367,22 @@ function Sidebar() {
 }
 
 export default function FeedPage() {
+  const [refreshKey, setRefreshKey] = useState(0);
+  const handlePostCreated = () => setRefreshKey((prev) => prev + 1);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-100 via-white to-purple-100 dark:from-gray-900 dark:via-gray-950 dark:to-gray-900 flex flex-col font-sans text-gray-900 dark:text-gray-100">
       <Header />
       <div className="flex flex-1">
         <Sidebar />
         <main className="flex-1 max-w-2xl mx-auto py-10 px-4">
-          <Stories />
-          <PostForm />
-          {fakePosts.map(post => <Post key={post.id} post={post} />)}
+          <PostForm onPostCreated={handlePostCreated} />
+          <div className="mt-8">
+            <PostList
+              key={refreshKey}
+              fetchUrl={`${process.env.NEXT_PUBLIC_API_URL}/api/posts/feed`}
+            />
+          </div>
         </main>
         <Follows />
       </div>

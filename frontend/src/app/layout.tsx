@@ -1,12 +1,12 @@
-import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
 import './globals.css'
+import { Inter } from 'next/font/google'
+import { ThemeProvider } from '@/components/ThemeProvider'
 
 const inter = Inter({ subsets: ['latin'] })
 
-export const metadata: Metadata = {
-  title: 'Breezy - Social Media Platform',
-  description: 'A modern social media platform built with Next.js',
+export const metadata = {
+  title: 'Breezy',
+  description: 'A breath of fresh share',
 }
 
 export default function RootLayout({
@@ -17,9 +17,11 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
-        <main>
-          {children}
-        </main>
+        <ThemeProvider>
+          <main>
+            {children}
+          </main>
+        </ThemeProvider>
       </body>
     </html>
   )

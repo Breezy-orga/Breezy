@@ -7,7 +7,8 @@ const userSchema = new mongoose.Schema({
     required: true,
     unique: true,
     trim: true,
-    minlength: 3
+    minlength: 3,
+    maxlength: 30
   },
   email: {
     type: String,
@@ -21,13 +22,19 @@ const userSchema = new mongoose.Schema({
     required: true,
     minlength: 6
   },
-  profilePicture: {
+  name: {
     type: String,
-    default: ''
+    required: true,
+    trim: true
   },
   bio: {
     type: String,
+    maxlength: 160,
     default: ''
+  },
+  profilePicture: {
+    type: String,
+    default: '/default-avatar.png'
   },
   followers: [{
     type: mongoose.Schema.Types.ObjectId,
@@ -36,7 +43,11 @@ const userSchema = new mongoose.Schema({
   following: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
-  }]
+  }],
+  createdAt: {
+    type: Date,
+    default: Date.now
+  }
 }, {
   timestamps: true
 });
@@ -59,4 +70,6 @@ userSchema.methods.comparePassword = async function(candidatePassword) {
   return bcrypt.compare(candidatePassword, this.password);
 };
 
-module.exports = mongoose.model('User', userSchema); 
+const User = mongoose.model('User', userSchema);
+
+module.exports = User; 
